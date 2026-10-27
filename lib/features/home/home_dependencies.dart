@@ -6,7 +6,6 @@ import 'domain/usecases/get_products_by_category_use_case.dart';
 import 'domain/usecases/get_products_use_case.dart';
 import 'presentation/cubit/home_cubit.dart';
 
-
 class HomeDependencies {
   HomeDependencies._();
 

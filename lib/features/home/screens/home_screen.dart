@@ -22,8 +22,39 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-class _HomeView extends StatelessWidget {
+class _HomeView extends StatefulWidget {
   const _HomeView();
+
+  @override
+  State<_HomeView> createState() => _HomeViewState();
+}
+
+class _HomeViewState extends State<_HomeView> {
+  static const double _loadMoreThreshold = 300;
+
+  late final ScrollController _scrollController;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController()..addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController
+      ..removeListener(_onScroll)
+      ..dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    final position = _scrollController.position;
+    if (position.pixels >= position.maxScrollExtent - _loadMoreThreshold) {
+      context.read<HomeCubit>().loadNextPage();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,6 +65,7 @@ class _HomeView extends StatelessWidget {
           color: AppTheme.primary,
           onRefresh: () => context.read<HomeCubit>().refresh(),
           child: CustomScrollView(
+            controller: _scrollController,
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
               SliverToBoxAdapter(
@@ -147,21 +179,43 @@ class _HomeView extends StatelessWidget {
                       hasScrollBody: false,
                       child: _ErrorView(message: message),
                     ),
-                    HomeLoaded(:final products) => SliverPadding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      sliver: SliverGrid(
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              childAspectRatio: 0.7,
-                              crossAxisSpacing: 16,
-                              mainAxisSpacing: 16,
+                    HomeLoaded(
+                      :final products,
+                      :final hasMore,
+                      :final isLoadingMore,
+                      :final paginationError,
+                    ) =>
+                      SliverMainAxisGroup(
+                        slivers: [
+                          SliverPadding(
+                            padding: const EdgeInsets.symmetric(horizontal: 24),
+                            sliver: SliverGrid(
+                              gridDelegate:
+                                  const SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 2,
+                                    childAspectRatio: 0.7,
+                                    crossAxisSpacing: 16,
+                                    mainAxisSpacing: 16,
+                                  ),
+                              delegate: SliverChildBuilderDelegate((
+                                context,
+                                index,
+                              ) {
+                                return ProductCard(product: products[index]);
+                              }, childCount: products.length),
                             ),
-                        delegate: SliverChildBuilderDelegate((context, index) {
-                          return ProductCard(product: products[index]);
-                        }, childCount: products.length),
+                          ),
+                          SliverToBoxAdapter(
+                            child: _PaginationFooter(
+                              hasMore: hasMore,
+                              isLoadingMore: isLoadingMore,
+                              errorMessage: paginationError,
+                              onRetry: () =>
+                                  context.read<HomeCubit>().loadNextPage(),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
                   };
                 },
               ),
@@ -284,5 +338,71 @@ class _ErrorView extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+/// Shown below the product grid: a spinner while the next page loads, an
+/// inline retry if it failed (the grid above stays untouched either way),
+/// or nothing once every page has been loaded.
+class _PaginationFooter extends StatelessWidget {
+  const _PaginationFooter({
+    required this.hasMore,
+    required this.isLoadingMore,
+    required this.errorMessage,
+    required this.onRetry,
+  });
+
+  final bool hasMore;
+  final bool isLoadingMore;
+  final String? errorMessage;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    if (errorMessage != null) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 24),
+        child: Column(
+          children: [
+            Text(
+              errorMessage!,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium
+                  ?.copyWith(fontSize: 14),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: 140,
+              height: 44,
+              child: PrimaryButton(text: 'Retry', onPressed: onRetry),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (isLoadingMore) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 24),
+        child: Center(
+          child: CircularProgressIndicator(color: AppTheme.primary),
+        ),
+      );
+    }
+
+    if (!hasMore) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 24),
+        child: Center(
+          child: Text(
+            "You've reached the end.",
+            style: Theme.of(context).textTheme.bodyMedium
+                ?.copyWith(fontSize: 13),
+          ),
+        ),
+      );
+    }
+
+    return const SizedBox(height: 24);
   }
 }

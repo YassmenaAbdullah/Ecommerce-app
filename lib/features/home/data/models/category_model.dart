@@ -1,6 +1,5 @@
 import '../../domain/entities/category_entity.dart';
 
-
 class CategoryModel {
   const CategoryModel({required this.id, required this.name});
 

@@ -3,7 +3,6 @@ import 'package:dio/dio.dart';
 import '../../../core/network/api_client.dart';
 import 'home_api_constants.dart';
 
-
 class HomeApiService {
   const HomeApiService(this._apiClient);
 
