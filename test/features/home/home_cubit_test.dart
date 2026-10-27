@@ -62,6 +62,11 @@ class _FakeHomeRepository implements HomeRepository {
     return _slice(productsByCategoryId[categoryId] ?? const [], offset, limit);
   }
 
+  @override
+  Future<ProductEntity> getProductById(int id) {
+    throw UnimplementedError('not exercised by HomeCubit tests');
+  }
+
   List<ProductEntity> _slice(
     List<ProductEntity> source,
     int offset,

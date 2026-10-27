@@ -18,6 +18,10 @@ class HomeApiService {
     );
   }
 
+  Future<Response<dynamic>> getProductById(int id) {
+    return _apiClient.dio.get(HomeApiConstants.productByIdEndpoint(id));
+  }
+
   Future<Response<dynamic>> getProductsByCategory({
     required int categoryId,
     required int limit,

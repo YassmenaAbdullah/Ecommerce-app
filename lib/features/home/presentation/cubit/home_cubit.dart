@@ -1,11 +1,10 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../core/dummy_data.dart' show Product;
 import '../../../../core/error/app_exception.dart';
-import '../../../../core/theme.dart';
 import '../../domain/entities/product_entity.dart';
 import '../../domain/usecases/get_products_by_category_use_case.dart';
 import '../../domain/usecases/get_products_use_case.dart';
+import '../mappers/product_display_mapper.dart';
 import 'home_state.dart';
 
 const String kAllCategoryLabel = 'All';
@@ -15,11 +14,6 @@ const String kAllCategoryLabel = 'All';
 /// metadata, so "is there another page?" is inferred the standard way:
 /// a page shorter than [kHomePageSize] means there's nothing left.
 const int kHomePageSize = 20;
-
-const List<String> _defaultSizes = ['One Size'];
-
-const String _fallbackImageUrl =
-    'https://via.placeholder.com/300x300.png?text=No+Image';
 
 /// Everything paginated for one category label ('All' or a real category).
 class _CategoryPage {
@@ -108,7 +102,7 @@ class HomeCubit extends Cubit<HomeState> {
 
       emit(
         HomeLoaded(
-          products: merged.map(_toDisplayProduct).toList(),
+          products: merged.map((e) => e.toDisplayProduct()).toList(),
           categories: _categoriesWithAll(),
           selectedCategory: category,
           hasMore: hasMore,
@@ -223,7 +217,7 @@ class HomeCubit extends Cubit<HomeState> {
     } else {
       emit(
         HomeLoaded(
-          products: page.items.map(_toDisplayProduct).toList(),
+          products: page.items.map((e) => e.toDisplayProduct()).toList(),
           categories: categories,
           selectedCategory: category,
           hasMore: page.hasMore,
@@ -248,16 +242,4 @@ class HomeCubit extends Cubit<HomeState> {
       );
     }
   }
-
-  Product _toDisplayProduct(ProductEntity entity) => Product(
-    id: entity.id.toString(),
-    name: entity.title,
-    description: entity.description,
-    price: entity.price,
-    imageUrl: entity.images.isNotEmpty
-        ? entity.images.first
-        : _fallbackImageUrl,
-    colors: const [AppTheme.primary],
-    sizes: _defaultSizes,
-  );
 }

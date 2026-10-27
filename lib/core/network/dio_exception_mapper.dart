@@ -23,8 +23,10 @@ AppException mapDioException(DioException exception) {
       );
     case DioExceptionType.badResponse:
       final statusCode = exception.response?.statusCode;
+      final data = exception.response?.data;
+      if (_isEntityNotFound(data)) return const ProductNotFoundException();
       return AppException(
-        _messageForStatus(statusCode, exception.response?.data),
+        _messageForStatus(statusCode, data),
         statusCode: statusCode,
       );
     case DioExceptionType.unknown:
@@ -45,6 +47,16 @@ String _messageForStatus(int? statusCode, dynamic data) {
   }
   return _extractServerMessage(data) ??
       'Something went wrong. Please try again.';
+}
+
+/// escuelajs reports a missing entity as a 400 (not a 404) with a TypeORM
+/// `EntityNotFoundError` body - not what you'd assume from the status code
+/// alone, so it's detected explicitly from the body shape.
+bool _isEntityNotFound(dynamic data) {
+  if (data is! Map) return false;
+  if (data['name'] == 'EntityNotFoundError') return true;
+  final message = data['message'];
+  return message is String && message.contains('Could not find any entity');
 }
 
 String? _extractServerMessage(dynamic data) {

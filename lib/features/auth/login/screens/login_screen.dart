@@ -4,6 +4,7 @@ import '../../../../core/error/app_exception.dart';
 import '../../../../core/widgets/custom_text_field.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../../../../core/theme.dart';
+import '../../../details/deep_link/product_deep_link_handler.dart';
 import '../../../main_navigation/screens/main_navigation_screen.dart';
 import '../../auth_dependencies.dart';
 import '../../domain/usecases/login_use_case.dart';
@@ -28,6 +29,17 @@ class _LoginScreenState extends State<LoginScreen> {
     emailController = TextEditingController();
     passwordController = TextEditingController();
     _loginUseCase = AuthDependencies.buildLoginUseCase();
+
+    // Splash always replaces itself with this screen 2s after launch, so
+    // this is the first safe point to act on the link (if any) that
+    // cold-launched the app - checking any earlier would race splash's own
+    // `pushReplacement`, which would swap out whatever we'd pushed instead
+    // of splash itself.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ProductDeepLinkHandler().handleInitialLink(Navigator.of(context));
+      }
+    });
 
     super.initState();
   }

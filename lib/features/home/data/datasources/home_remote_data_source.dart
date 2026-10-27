@@ -16,6 +16,8 @@ abstract class HomeRemoteDataSource {
     required int limit,
     required int offset,
   });
+
+  Future<ProductModel> getProductById(int id);
 }
 
 class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
@@ -52,6 +54,22 @@ class HomeRemoteDataSourceImpl implements HomeRemoteDataSource {
         offset: offset,
       );
       return _parseProducts(response.data);
+    } on DioException catch (e) {
+      throw mapDioException(e);
+    }
+  }
+
+  @override
+  Future<ProductModel> getProductById(int id) async {
+    try {
+      final response = await _apiService.getProductById(id);
+      final data = response.data;
+      if (data is! Map<String, dynamic>) {
+        throw const AppException(
+          'Unexpected response from server. Please try again.',
+        );
+      }
+      return ProductModel.fromJson(data);
     } on DioException catch (e) {
       throw mapDioException(e);
     }

@@ -32,4 +32,10 @@ class HomeRepositoryImpl implements HomeRepository {
     );
     return models.map((model) => model.toEntity()).toList();
   }
+
+  @override
+  Future<ProductEntity> getProductById(int id) async {
+    final model = await _remoteDataSource.getProductById(id);
+    return model.toEntity();
+  }
 }
