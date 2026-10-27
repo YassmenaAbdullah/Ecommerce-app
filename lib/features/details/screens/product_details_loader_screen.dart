@@ -29,7 +29,8 @@ class ProductDetailsLoaderScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final builder = _cubitBuilder ?? DetailsDependencies.buildProductDetailsCubit;
+    final builder =
+        _cubitBuilder ?? DetailsDependencies.buildProductDetailsCubit;
     return BlocProvider(
       create: (_) => builder()..loadProduct(productId),
       child: _ProductDetailsLoaderView(productId: productId),
